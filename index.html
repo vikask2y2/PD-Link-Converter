@@ -60,9 +60,9 @@
 
     .link-box {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       background: #f1f1f1;
-      padding: 8px 10px;
+      padding: 0 0 0 8px;
       border: 1px solid #ddd;
       margin-bottom: 10px;
       border-radius: 5px;
@@ -72,17 +72,22 @@
       flex-grow: 1;
       font-size: 13px;
       word-break: break-word;
+      display: flex;
+      align-items: center;
     }
 
     .download-btn {
-      margin-left: 10px;
-      padding: 6px 12px;
       background: #007BFF;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 15px;
+      height: 100%;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .download-btn.clicked {
@@ -112,9 +117,14 @@
 
     function convertLinks() {
       const lines = inputBox.value.trim().split(/\r?\n/);
+      const validLinks = lines.filter(line => /pixeldrain\.com\/u\/[a-zA-Z0-9]+/.test(line));
+
+      // Replace textarea content with only valid links
+      inputBox.value = validLinks.join("\n");
+
       outputDiv.innerHTML = "";
 
-      lines.forEach((line, index) => {
+      validLinks.forEach((line, index) => {
         const match = line.match(/pixeldrain\.com\/u\/([a-zA-Z0-9]+)/);
         if (match) {
           const id = match[1];

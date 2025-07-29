@@ -46,12 +46,46 @@
       padding: 8px 16px;
       border-radius: 5px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       width: 100%;
     }
 
     .clear-btn:hover {
       background-color: #c82333;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .controls input[type="number"] {
+      width: 80px;
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    .controls label {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .start-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .start-btn:hover {
+      background-color: #218838;
     }
 
     .result {
@@ -84,7 +118,7 @@
       cursor: pointer;
       font-size: 15px;
       height: 100%;
-      padding: 10px;
+      padding: 0 24px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -106,14 +140,33 @@
     <h2>PD Link Converter</h2>
     <textarea id="input" placeholder="Paste pixeldrain.com/u/... links here (one per line)"></textarea>
     <button class="clear-btn" onclick="clearAll()">Clear All</button>
+
+    <div class="controls">
+      <input type="number" id="count" placeholder="Number" min="1">
+      <label><input type="checkbox" id="selectAll"> Select All</label>
+      <button class="start-btn" onclick="startDownloads()">Start Download</button>
+    </div>
+
     <div class="result" id="output"></div>
   </div>
 
   <script>
     const inputBox = document.getElementById("input");
     const outputDiv = document.getElementById("output");
+    const countInput = document.getElementById("count");
+    const selectAllCheckbox = document.getElementById("selectAll");
 
     inputBox.addEventListener("input", convertLinks);
+    selectAllCheckbox.addEventListener("change", () => {
+      if (selectAllCheckbox.checked) {
+        countInput.value = "";
+      }
+    });
+    countInput.addEventListener("input", () => {
+      if (countInput.value !== "") {
+        selectAllCheckbox.checked = false;
+      }
+    });
 
     function convertLinks() {
       const lines = inputBox.value.trim().split(/\r?\n/);
@@ -156,6 +209,19 @@
     function clearAll() {
       inputBox.value = "";
       outputDiv.innerHTML = "";
+      countInput.value = "";
+      selectAllCheckbox.checked = false;
+    }
+
+    function startDownloads() {
+      const buttons = Array.from(document.querySelectorAll(".download-btn"));
+      let count = parseInt(countInput.value);
+
+      if (selectAllCheckbox.checked) {
+        buttons.forEach(btn => btn.click());
+      } else if (!isNaN(count) && count > 0) {
+        buttons.slice(0, count).forEach(btn => btn.click());
+      }
     }
   </script>
 </body>

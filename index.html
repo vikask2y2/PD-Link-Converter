@@ -72,7 +72,7 @@
     }
 
     .controls input[type="number"] {
-      width: 80px;
+      width: 60px;
       padding: 6px;
       font-size: 14px;
     }
@@ -158,7 +158,8 @@
     </div>
 
     <div class="controls">
-      <input type="number" id="count" placeholder="Number" min="1">
+      <input type="number" id="from" placeholder="From" min="0" value="0">
+      <input type="number" id="to" placeholder="To" min="0" value="0">
       <label><input type="checkbox" id="selectAll" checked> Select All</label>
       <button class="start-btn" onclick="startDownloads()">Start Download</button>
     </div>
@@ -169,22 +170,26 @@
   <script>
     const inputBox = document.getElementById("input");
     const outputDiv = document.getElementById("output");
-    const countInput = document.getElementById("count");
+    const fromInput = document.getElementById("from");
+    const toInput = document.getElementById("to");
     const selectAllCheckbox = document.getElementById("selectAll");
 
     inputBox.addEventListener("input", convertLinks);
 
     selectAllCheckbox.addEventListener("change", () => {
       if (selectAllCheckbox.checked) {
-        countInput.value = "";
+        fromInput.value = "0";
+        toInput.value = "0";
       }
     });
 
-    countInput.addEventListener("input", () => {
-      if (countInput.value !== "") {
-        selectAllCheckbox.checked = false;
-      }
-    });
+    [fromInput, toInput].forEach(input =>
+      input.addEventListener("input", () => {
+        if (fromInput.value !== "0" || toInput.value !== "0") {
+          selectAllCheckbox.checked = false;
+        }
+      })
+    );
 
     function convertLinks() {
       const lines = inputBox.value.trim().split(/\r?\n/);
@@ -224,18 +229,23 @@
     function clearAll() {
       inputBox.value = "";
       outputDiv.innerHTML = "";
-      countInput.value = "";
+      fromInput.value = "0";
+      toInput.value = "0";
       selectAllCheckbox.checked = true;
     }
 
     function startDownloads() {
       const buttons = Array.from(document.querySelectorAll(".download-btn"));
-      let count = parseInt(countInput.value);
 
       if (selectAllCheckbox.checked) {
         buttons.forEach(btn => btn.click());
-      } else if (!isNaN(count) && count > 0) {
-        buttons.slice(0, count).forEach(btn => btn.click());
+      } else {
+        let from = parseInt(fromInput.value);
+        let to = parseInt(toInput.value);
+
+        if (!isNaN(from) && !isNaN(to) && from >= 1 && to >= from) {
+          buttons.slice(from - 1, to).forEach(btn => btn.click());
+        }
       }
     }
   </script>

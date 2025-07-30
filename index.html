@@ -194,7 +194,7 @@
     function convertLinks() {
       const lines = inputBox.value.trim().split(/\r?\n/);
       const validLinks = lines.filter(line => /pixeldrain\.com\/u\/[a-zA-Z0-9]+/.test(line));
-      inputBox.value = validLinks.join("\n");
+      inputBox.value = validLinks.join("\n") + "\n"; // Always keep an empty line at the end
       outputDiv.innerHTML = "";
 
       validLinks.forEach((line, index) => {

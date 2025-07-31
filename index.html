@@ -4,18 +4,19 @@
   <meta charset="UTF-8">
   <title>PD Link Converter</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      background: #f0f0ff;
       padding: 30px;
       display: flex;
       justify-content: center;
     }
 
     .container {
-      width: 600px;
-      background: #fff;
+      width: 700px;
+      background: #ffffff;
       padding: 20px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       border-radius: 10px;
@@ -46,7 +47,7 @@
     }
 
     .clear-btn {
-      background-color: #dc3545;
+      background-color: #a855f7;
       color: white;
       border: none;
       padding: 8px 16px;
@@ -56,7 +57,7 @@
     }
 
     .clear-btn.secondary {
-      background-color: #6c757d;
+      background-color: #6b21a8;
     }
 
     .clear-btn:hover {
@@ -85,7 +86,7 @@
     }
 
     .start-btn {
-      background-color: #28a745;
+      background-color: #7c3aed;
       color: white;
       border: none;
       padding: 8px 16px;
@@ -95,7 +96,7 @@
     }
 
     .start-btn:hover {
-      background-color: #218838;
+      background-color: #5b21b6;
     }
 
     .result {
@@ -104,44 +105,75 @@
 
     .link-box {
       display: flex;
-      align-items: stretch;
-      background: #f1f1f1;
-      padding: 0 0 0 8px;
-      border: 1px solid #ddd;
+      justify-content: space-between;
+      align-items: center;
+      background: #ede9fe;
+      border-radius: 6px;
+      padding: 12px 16px;
       margin-bottom: 10px;
-      border-radius: 5px;
+      font-size: 14px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
-    .link-text {
-      flex-grow: 1;
-      font-size: 13px;
-      word-break: break-word;
+    .file-index {
+      margin-right: 10px;
+      font-weight: bold;
+      font-size: 14px;
+      color: #555;
+      min-width: 20px;
+    }
+
+    .file-info {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    .file-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #222;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 13px;
+      font-weight: bold;
+      color: #5b21b6;
+      white-space: nowrap;
     }
 
     .download-btn {
-      background: #007BFF;
+      background-color: #5b21b6;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 15px;
-      height: 30px;
-      padding: 0 24px;
+      font-size: 14px;
+      padding: 6px 16px;
+      transition: background-color 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
     }
 
     .download-btn.clicked {
-      background-color: #28a745;
+      background-color: #483d8b;
     }
 
-    .tick {
-      margin-left: 6px;
-      font-size: 16px;
-      color: #28a745;
+    .download-btn:hover {
+      background-color: #4c1d95;
+    }
+
+    .button-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
   </style>
 </head>
@@ -158,8 +190,8 @@
     </div>
 
     <div class="controls">
-      <input type="number" id="from" placeholder="From" min="0" value="0">
-      <input type="number" id="to" placeholder="To" min="0" value="0">
+      <input type="number" id="from" placeholder="From" min="0">
+      <input type="number" id="to" placeholder="To" min="0">
       <label><input type="checkbox" id="selectAll" checked> Select All</label>
       <button class="start-btn" onclick="startDownloads()">Start Download</button>
     </div>
@@ -178,59 +210,100 @@
 
     selectAllCheckbox.addEventListener("change", () => {
       if (selectAllCheckbox.checked) {
-        fromInput.value = "0";
-        toInput.value = "0";
+        fromInput.value = "";
+        toInput.value = "";
       }
     });
 
     [fromInput, toInput].forEach(input =>
       input.addEventListener("input", () => {
-        if (fromInput.value !== "0" || toInput.value !== "0") {
+        if (fromInput.value !== "" || toInput.value !== "") {
           selectAllCheckbox.checked = false;
         }
       })
     );
 
-    function convertLinks() {
+    async function convertLinks() {
       const lines = inputBox.value.trim().split(/\r?\n/);
       const validLinks = lines.filter(line => /pixeldrain\.com\/u\/[a-zA-Z0-9]+/.test(line));
-      inputBox.value = validLinks.join("\n") + "\n"; // Always keep an empty line at the end
+      inputBox.value = validLinks.join("\n") + "\n";
       outputDiv.innerHTML = "";
 
-      validLinks.forEach((line, index) => {
+      for (let index = 0; index < validLinks.length; index++) {
+        const line = validLinks[index];
         const match = line.match(/pixeldrain\.com\/u\/([a-zA-Z0-9]+)/);
-        if (match) {
-          const id = match[1];
-          const newLink = `https://pd.cybar.xyz/${id}`;
+        if (!match) continue;
+
+        const id = match[1];
+        const apiURL = `https://pixeldrain.com/api/file/${id}/info`;
+        const downloadLink = `https://pixeldrain.com/api/file/${id}?download`;
+
+        try {
+          const res = await fetch(apiURL);
+          if (!res.ok) throw new Error("Failed to fetch metadata");
+          const data = await res.json();
+
+          const fileName = data.name || `File ${index + 1}`;
+          const fileSize = formatBytes(data.size || 0);
 
           const box = document.createElement("div");
           box.className = "link-box";
 
-          const span = document.createElement("span");
-          span.className = "link-text";
-          span.textContent = `${index + 1}. ${newLink}`;
+          const indexSpan = document.createElement("span");
+          indexSpan.className = "file-index";
+          indexSpan.textContent = `${index + 1}.`;
+
+          const fileInfo = document.createElement("div");
+          fileInfo.className = "file-info";
+
+          const fileNameSpan = document.createElement("span");
+          fileNameSpan.className = "file-name";
+          fileNameSpan.textContent = fileName;
+
+          fileInfo.appendChild(fileNameSpan);
+
+          const buttonWrapper = document.createElement("div");
+          buttonWrapper.className = "button-wrapper";
+
+          const fileSizeSpan = document.createElement("span");
+          fileSizeSpan.className = "file-size";
+          fileSizeSpan.textContent = fileSize;
 
           const button = document.createElement("button");
           button.className = "download-btn";
-          button.textContent = "Download";
+          button.innerHTML = `<i class="fas fa-download"></i>`;
           button.onclick = () => {
-            window.open(newLink, "_blank");
+            window.open(downloadLink, "_blank");
             button.classList.add("clicked");
-            button.innerHTML = "Downloading <span class='tick'>✅</span>";
+            button.innerHTML = `<i class="fas fa-check"></i>`;
           };
 
-          box.appendChild(span);
-          box.appendChild(button);
+          buttonWrapper.appendChild(fileSizeSpan);
+          buttonWrapper.appendChild(button);
+
+          box.appendChild(indexSpan);
+          box.appendChild(fileInfo);
+          box.appendChild(buttonWrapper);
+
           outputDiv.appendChild(box);
+        } catch (err) {
+          console.error(err);
         }
-      });
+      }
+    }
+
+    function formatBytes(bytes) {
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      if (bytes === 0) return '0 B';
+      const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+      return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
     }
 
     function clearAll() {
       inputBox.value = "";
       outputDiv.innerHTML = "";
-      fromInput.value = "0";
-      toInput.value = "0";
+      fromInput.value = "";
+      toInput.value = "";
       selectAllCheckbox.checked = true;
     }
 
